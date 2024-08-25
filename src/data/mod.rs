@@ -1,3 +1,3 @@
-pub mod qpgs;
 pub mod qpigs;
-pub mod usb;
+pub mod qpigs2;
+pub mod serial;

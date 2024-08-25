@@ -5,9 +5,9 @@ use aws_sdk_cloudwatch::{
     Client,
 };
 use data::{
-    qpgs::QPGS,
     qpigs::QPIGS,
-    usb::{fetch_command_data_usb, RAW_HID0, RAW_HID1},
+    qpigs2::QPIGS2,
+    serial::{fetch_command_data_serial, TTY_USB0, TTY_USB1},
 };
 use log::info;
 
@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     // Create the CloudWatch client
     let client = Client::new(&config);
 
-    let result = fetch_command_data_usb(RAW_HID0, "QID")
+    let result = fetch_command_data_serial(TTY_USB0, "QID")
         .await
         .expect("Failed to read response");
     info!(
@@ -39,21 +39,21 @@ async fn main() -> Result<()> {
             .expect("could not strip prefix")
     );
 
-    let result = fetch_command_data_usb(RAW_HID0, "QPIGS")
+    let result = fetch_command_data_serial(TTY_USB0, "QPIGS")
         .await
         .expect("Failed to read response");
 
     let i1qpigs = QPIGS::new_from_string(&result).expect("Failed to parse");
-    info!("nverter 1 QPIGS: {:#?}", i1qpigs);
+    info!("inverter 1 QPIGS: {:#?}", i1qpigs);
 
-    let result = fetch_command_data_usb(RAW_HID1, "QPGS1")
+    let result = fetch_command_data_serial(TTY_USB1, "QPIGS2")
         .await
         .expect("Failed to read response");
 
-    let i1qpgs = QPGS::new_from_string(&result).expect("Failed to parse");
-    info!("inverter 1 QPGS: {:#?}", i1qpgs);
+    let i1qpigs2 = QPIGS2::new_from_string(&result).expect("Failed to parse");
+    info!("inverter 1 QPIGS2: {:#?}", i1qpigs2);
 
-    let result = fetch_command_data_usb(RAW_HID1, "QID")
+    let result = fetch_command_data_serial(TTY_USB1, "QID")
         .await
         .expect("Failed to read response");
     info!(
@@ -66,19 +66,19 @@ async fn main() -> Result<()> {
             .expect("could not strip prefix")
     );
 
-    let result = fetch_command_data_usb(RAW_HID1, "QPIGS")
+    let result = fetch_command_data_serial(TTY_USB1, "QPIGS")
         .await
         .expect("Failed to read response");
 
     let i2qpigs = QPIGS::new_from_string(&result).expect("Failed to parse");
     info!("inverter 2 QPIGS: {:#?}", i2qpigs);
 
-    let result = fetch_command_data_usb(RAW_HID1, "QPGS2")
+    let result = fetch_command_data_serial(TTY_USB1, "QPIGS2")
         .await
         .expect("Failed to read response");
 
-    let i2qpgs = QPGS::new_from_string(&result).expect("Failed to parse");
-    info!("inverter 2 QPGS: {:#?}", i2qpgs);
+    let i2qpigs2 = QPIGS2::new_from_string(&result).expect("Failed to parse");
+    info!("inverter 2 QPIGS2: {:#?}", i2qpigs2);
 
     // Define the metric data
     let i1pv1watts = MetricDatum::builder()
@@ -90,7 +90,7 @@ async fn main() -> Result<()> {
     let i1pv2watts = MetricDatum::builder()
         .metric_name("Inverter1Pv2Watts")
         .unit(StandardUnit::Count)
-        .value(i1qpgs.pv2_charging_power as f64)
+        .value(i1qpigs2.pv2_charging_power as f64)
         .build();
 
     let i2pv1watts = MetricDatum::builder()
@@ -102,7 +102,7 @@ async fn main() -> Result<()> {
     let i2pv2watts = MetricDatum::builder()
         .metric_name("Inverter2Pv2Watts")
         .unit(StandardUnit::Count)
-        .value(i2qpgs.pv2_charging_power as f64)
+        .value(i2qpigs2.pv2_charging_power as f64)
         .build();
 
     let battery_percentage = MetricDatum::builder()
