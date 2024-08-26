@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     let i1qpigs = QPIGS::new_from_string(&result).expect("Failed to parse");
     info!("inverter 1 QPIGS: {:#?}", i1qpigs);
 
-    let result = fetch_command_data_serial(TTY_USB1, "QPIGS2")
+    let result = fetch_command_data_serial(TTY_USB0, "QPIGS2")
         .await
         .expect("Failed to read response");
 
