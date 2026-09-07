@@ -3,8 +3,19 @@ use std::{io::Read, time::Duration};
 use anyhow::{bail, Result};
 use crc16::State as CRCState;
 use log::debug;
-pub const TTY_USB0: &str = "/dev/ttyUSB0";
-pub const TTY_USB1: &str = "/dev/ttyUSB1";
+// Addressed via udev symlinks, NOT /dev/ttyUSB<N>. Those numbers are assigned in
+// USB enumeration order and are NOT stable across reboots: after a reboot on
+// 2026-09-07, ttyUSB0 and ttyUSB1 swapped which physical USB controller they
+// mapped to, silently transposing Inverter1 and Inverter2 in CloudWatch.
+//
+// The symlinks are keyed on ID_PATH (physical USB port), which does not move.
+// See /etc/udev/rules.d/99-serial-names.rules.
+//
+// Mapping preserves the historical metric names, verified by QID:
+//   inverter-a = xhci-hcd.0 = serial 9634230610137 -> Inverter1  (was ttyUSB0)
+//   inverter-b = xhci-hcd.1 = serial 9634210510019 -> Inverter2  (was ttyUSB1)
+pub const TTY_USB0: &str = "/dev/inverter-a";
+pub const TTY_USB1: &str = "/dev/inverter-b";
 
 pub async fn fetch_command_data_serial(serial_port: &str, command: &str) -> Result<String> {
     let command = build_command(command).await;
